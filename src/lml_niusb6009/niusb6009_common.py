@@ -66,6 +66,13 @@ class AoChannel(IntEnum):
     AO0 = 0x0000
     AO1 = 0x0001
 
+# (n_ports, sorted_port_ids) -> (tag, port_list_bytes)
+_DIO_FORMS = {
+    (1, (Port.P0,)):         (DiTag.ONE_PORT,  bytes([Port.P0, 0x00])),
+    (1, (Port.P1,)):         (DiTag.ONE_PORT,  bytes([Port.P1, 0x00])),
+    (2, (Port.P0, Port.P1)): (DiTag.TWO_PORTS, bytes([Port.P0, Port.P1])),
+}
+
 ## Envelope Builders
 
 # `IntEnum` values are `int` subclasses, so `bytes([Subsystem.DIO])` and `struct.pack("<B", Subsystem.DIO)` both work directly.
@@ -91,8 +98,39 @@ def build_lifecycle_cmd(opcode: Opcode, state: int = 0x00) -> bytes:
     payload = bytes([0x01, int(opcode), 0x02, state, 0x00, 0x00])
     return build_command(payload)
 
+## Response Parser
 ACK_BYTES = bytes.fromhex("0001000c0008010000000002")
 
+def parse_response(data: bytes) -> dict:
+    """
+    Classify an EP81 IN packet.
+
+    Returns one of:
+      {"kind": "ack"}
+      {"kind": "digital_in", "tag": int, "states": list[int], "payload": bytes}
+      {"kind": "unknown", "raw": bytes}
+    """
+    if data == ACK_BYTES:
+        return {"kind": "ack"}
+
+    if len(data) < 4 or data[0:2] != b"\x00\x01":
+        return {"kind": "unknown", "raw": data}
+
+    # noinspection PyTypeChecker
+    outer_len = struct.unpack_from(">H", data, 2)[0]
+    payload = data[4:4 + outer_len]
+
+    if (len(payload) >= 12
+            and payload[0:2] == b"\x00\x0c"
+            and payload[6:8] == b"\x00\x02"
+            and payload[8:10] in (b"\x00\x03", b"\x00\x04")):
+        # noinspection PyTypeChecker
+        tag = struct.unpack_from(">H", payload, 8)[0]
+        n_ports = tag - 2
+        states = list(payload[10:10 + n_ports])
+        return {"kind": "digital_in", "tag": tag, "states": states, "payload": payload}
+
+    return {"kind": "unknown", "raw": data}
 ## Convenience Wrappers
 ## Reusability — Same Primitives for Other Subsystems
 

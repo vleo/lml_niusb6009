@@ -11,6 +11,7 @@ from lml_niusb6009.niusb6009_common import build_subsystem_cmd
 from lml_niusb6009.niusb6009_common import ACK_BYTES
 from lml_niusb6009.niusb6009_common import usb_device_context
 from lml_niusb6009.niusb6009_common import send_cmd, do_read
+from lml_niusb6009.niusb6009_common import parse_response
 from lml_niusb6009.niusb6009_common import cmdLineArgs
 
 
@@ -64,37 +65,6 @@ class DigitalInResult:
 
 ## Response Parser
 
-def parse_response(data: bytes) -> dict:
-    """
-    Classify an EP81 IN packet.
-
-    Returns one of:
-      {"kind": "ack"}
-      {"kind": "digital_in", "tag": int, "states": list[int], "payload": bytes}
-      {"kind": "unknown", "raw": bytes}
-    """
-    if data == ACK_BYTES:
-        return {"kind": "ack"}
-
-    if len(data) < 4 or data[0:2] != b"\x00\x01":
-        return {"kind": "unknown", "raw": data}
-
-    # noinspection PyTypeChecker
-    outer_len = struct.unpack_from(">H", data, 2)[0]
-    payload = data[4:4 + outer_len]
-
-    if (len(payload) >= 12
-            and payload[0:2] == b"\x00\x0c"
-            and payload[6:8] == b"\x00\x02"
-            and payload[8:10] in (b"\x00\x03", b"\x00\x04")):
-        # noinspection PyTypeChecker
-        tag = struct.unpack_from(">H", payload, 8)[0]
-        n_ports = tag - 2
-        states = list(payload[10:10 + n_ports])
-        return {"kind": "digital_in", "tag": tag, "states": states, "payload": payload}
-
-    return {"kind": "unknown", "raw": data}
-
 def decode_digital_in(result: dict, requested_ports: tuple[Port, ...]) -> DigitalInResult:
     """Map a digital_in response to per-port PortState objects."""
     if result["kind"] != "digital_in":
@@ -125,18 +95,13 @@ def decode_digital_in(result: dict, requested_ports: tuple[Port, ...]) -> Digita
 
 ## Convenience Wrappers
 
-def digital_in_command(*ports: Port) -> bytes:
-    return build_digital_in(tuple(ports))
-
-
-def digital_in_parse(data: bytes, requested_ports: tuple[Port, ...]) -> DigitalInResult:
-    return decode_digital_in(parse_response(data), requested_ports)
-
 def read_di(dev: usb.core.Device, *ports: Port) -> DigitalInResult:
-    command: bytes = digital_in_command(*ports)
+    command: bytes = build_digital_in(tuple(ports))
+    print(command.hex())
     send_cmd(dev, command)
     response: bytes = do_read(device)
-    resp_di: DigitalInResult = digital_in_parse(response, (Port.P0, Port.P1))
+    print(response.hex())
+    resp_di: DigitalInResult = decode_digital_in(parse_response(response), (Port.P0, Port.P1))
     return resp_di
 
 
