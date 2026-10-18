@@ -144,14 +144,7 @@ def read_di(dev: usb.core.Device, *ports: Port) -> DigitalInResult:
 if __name__ == "__main__":
     with usb_device_context(CONST.VID, CONST.PID) as device:
         try:
-            ###################################################
-            commandm = digital_in_command(Port.P0, Port.P1)
-            print(commandm.hex())
-            send_cmd(device,commandm)
-
-            responsem = do_read(device)
-            print(responsem.hex())
-            rdi = digital_in_parse(responsem, (Port.P0, Port.P1))
+            rdi : DigitalInResult = read_di(device, Port.P0, Port.P1)
 
             if rdi.port0 is not None:
                 print(rdi.port0.state)            # 0xf5
