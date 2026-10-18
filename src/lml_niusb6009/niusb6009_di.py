@@ -9,8 +9,9 @@ from dataclasses import dataclass
 from lml_niusb6009.niusb6009_common import Subsystem, Opcode, Port, DiTag, CONST
 from lml_niusb6009.niusb6009_common import build_subsystem_cmd
 from lml_niusb6009.niusb6009_common import ACK_BYTES
-from lml_niusb6009.niusb6009_common import open_usb_device, close_usb_device
+from lml_niusb6009.niusb6009_common import usb_device_context
 from lml_niusb6009.niusb6009_common import send_cmd, do_read
+from lml_niusb6009.niusb6009_common import cmdLineArgs
 
 
 ## Digital Input — Command Builder
@@ -138,26 +139,28 @@ def read_di(dev: usb.core.Device, *ports: Port) -> DigitalInResult:
     resp_di: DigitalInResult = digital_in_parse(response, (Port.P0, Port.P1))
     return resp_di
 
+
+
 if __name__ == "__main__":
-    device = open_usb_device(CONST.VID, CONST.PID)
-    try:
-        ###################################################
-        commandm = digital_in_command(Port.P0, Port.P1)
-        print(commandm.hex())
-        send_cmd(device,commandm)
+    with usb_device_context(CONST.VID, CONST.PID) as device:
+        try:
+            ###################################################
+            commandm = digital_in_command(Port.P0, Port.P1)
+            print(commandm.hex())
+            send_cmd(device,commandm)
 
-        responsem = do_read(device)
-        print(responsem.hex())
-        rdi = digital_in_parse(responsem, (Port.P0, Port.P1))
+            responsem = do_read(device)
+            print(responsem.hex())
+            rdi = digital_in_parse(responsem, (Port.P0, Port.P1))
 
-        if rdi.port0 is not None:
-            print(rdi.port0.state)            # 0xf5
-            print(rdi.port0.lines)            # (True, False, True, False, True, True, True, True)
-            print(rdi.port0.line(0))          # True
-        if rdi.port1 is not None:
-            print(rdi.port1.state)            # 0xfd
-            print(rdi.port1.lines)            # (True, False, True, True)
-            print(rdi.port1.upper_nibble)     # 0xf (don't care on USB-6009)
-        ###################################################
-    finally:
-        close_usb_device(device)
+            if rdi.port0 is not None:
+                print(rdi.port0.state)            # 0xf5
+                print(rdi.port0.lines)            # (True, False, True, False, True, True, True, True)
+                print(rdi.port0.line(0))          # True
+            if rdi.port1 is not None:
+                print(rdi.port1.state)            # 0xfd
+                print(rdi.port1.lines)            # (True, False, True, True)
+                print(rdi.port1.upper_nibble)     # 0xf (don't care on USB-6009)
+            ###################################################
+        except RuntimeError as e:
+            print("Main error: {e}")
