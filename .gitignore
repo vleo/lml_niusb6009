@@ -1,0 +1,6 @@
+*.swp
+src/lml_common.egg-info/
+src/lml_common/__pycache__/
+src/lml_common/lmlconstants.c
+src/lml_common/lmlconstants.cpython-313-x86_64-linux-gnu.so
+

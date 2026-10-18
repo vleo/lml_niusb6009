@@ -1,0 +1,47 @@
+[build-system]
+#requires = ["setuptools>=61.0.0", "Cython>=3.0.0"]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lml_niusb6009"
+version = "0.1.0"
+description = "NI USB-6009 interface library pure python based on pyusb"
+readme = "usb-6009.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Vassili Leonov", email = "vleolml@mail.ru" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+
+    # Standard official library scope:
+    "Topic :: Software Development :: Libraries :: Python Modules",
+
+    # The standard official keys for hardware/driver integration:
+    "Topic :: System :: Hardware :: Hardware Drivers",
+]
+
+dependencies = ["pyusb", "lml_common"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "mypy>=1.4.0",
+    "black>=24.0.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Tell setuptools to include non-python assets like tshark_capture.sh
+[tool.setuptools.package-data]
+lml_niusb6009 = ["*.sh"]
+
+[tool.mypy]
+mypy_path = "typings"
+
