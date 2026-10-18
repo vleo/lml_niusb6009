@@ -1,6 +1,8 @@
 *.swp
-src/lml_common.egg-info/
-src/lml_common/__pycache__/
-src/lml_common/lmlconstants.c
-src/lml_common/lmlconstants.cpython-313-x86_64-linux-gnu.so
+.idea/workspace.xml
+dist/
+src/lml_niusb6009.egg-info/
+src/lml_niusb6009/__pycache__/
+src/lml_niusb6009/niusb6009_common.py
+src/lml_niusb6009/py.typed
 

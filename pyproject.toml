@@ -43,5 +43,15 @@ where = ["src"]
 lml_niusb6009 = ["*.sh"]
 
 [tool.mypy]
-mypy_path = "typings"
+# Tell mypy where your source roots live so it maps imports flawlessly
+mypy_path = "src:typings"
+
+# Point mypy to your local third-party type definitions folder
+explicit_package_bases = true
+
+# Optional but highly recommended for clear, strict safety
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
 
