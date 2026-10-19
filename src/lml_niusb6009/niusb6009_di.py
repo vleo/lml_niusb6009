@@ -1,18 +1,16 @@
 #!/bin/env python
 import usb.core
 
-import struct
 from typing import Optional
 
 from dataclasses import dataclass
 
 from lml_niusb6009.niusb6009_common import Subsystem, Opcode, Port, DiTag, CONST
 from lml_niusb6009.niusb6009_common import build_subsystem_cmd
-from lml_niusb6009.niusb6009_common import ACK_BYTES
 from lml_niusb6009.niusb6009_common import usb_device_context
 from lml_niusb6009.niusb6009_common import send_cmd, do_read
 from lml_niusb6009.niusb6009_common import parse_response
-from lml_niusb6009.niusb6009_common import cmdLineArgs
+#from lml_niusb6009.niusb6009_common import cmdLineArgs
 
 
 ## Digital Input — Command Builder
@@ -24,6 +22,11 @@ _DI_FORMS = {
     (2, (Port.P0, Port.P1)): (DiTag.TWO_PORTS, bytes([Port.P0, Port.P1])),
 }
 
+#                                     |  payload |
+#                        op   sb      |magic_code|
+# h->d: 0001 0010 000c 010e 0210 00 00 0003 01 00 # port0 read
+# h->d: 0001 0010 000c 010e 0210 00 00 0003 00 01 # port1 read
+# h->d: 0001 0010 000c 010e 0210 00 00 0004 00 01 # two ports read
 def build_digital_in(ports: tuple[Port, ...]) -> bytes:
     """
     Build a digital input command.
@@ -36,7 +39,7 @@ def build_digital_in(ports: tuple[Port, ...]) -> bytes:
         raise ValueError(f"unsupported digital input ports: {ports}")
     # noinspection PyTypeChecker
     tag, port_bytes = _DI_FORMS[key]
-    data = bytes([int(tag)]) + port_bytes
+    data = bytes([0x00, int(tag)]) + port_bytes
     return build_subsystem_cmd(Opcode.OPEN, Subsystem.DIO, data)
 
 ## Response Model

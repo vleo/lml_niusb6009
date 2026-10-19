@@ -13,6 +13,8 @@ from lml_common.immutable import FrozenClassMeta, freeze_class
 
 import argparse
 
+from usb.legacy import USBError
+
 ap: argparse.ArgumentParser = argparse.ArgumentParser()
 ap.add_argument("--verbose", action="store_true")
 
@@ -89,7 +91,7 @@ def build_command(payload: bytes) -> bytes:
 def build_subsystem_cmd(opcode: Opcode, subsystem: Subsystem, data: bytes) -> bytes:
     """Build 01 <op> 02 <subsys> 00 00 <data>."""
     # noinspection PyTypeChecker
-    payload = bytes([0x01, int(opcode), 0x02, int(subsystem), 0x00, 0x00, 0x00]) + data # type: ignore
+    payload = bytes([0x01, int(opcode), 0x02, int(subsystem), 0x00, 0x00]) + data # type: ignore
     return build_command(payload)
 
 
@@ -163,8 +165,10 @@ def build_ai_commit() -> bytes:
 
 def send_cmd(dev: usb.core.Device, cmd : bytes):
     """ NI-DAQmx start cmd sequence for a DI channels"""
-
-    dev.write(CONST.EP_CMD_OUT, cmd, timeout=1000)
+    try:
+        dev.write(CONST.EP_CMD_OUT, cmd, timeout=1000)
+    except USBError as e:
+        print(f"Error on sending to USB: {e}")
 
 def do_read(dev):
     """ NI-DAQmx read sequence for a DI channels"""
