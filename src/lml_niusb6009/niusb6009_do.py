@@ -4,8 +4,6 @@ import usb.core
 import struct
 from typing import Optional
 
-from dataclasses import dataclass
-
 from usb.legacy import USBError
 
 from lml_niusb6009.niusb6009_common import Subsystem, Opcode, Port, CONST
@@ -37,31 +35,7 @@ def build_digital_out_write(port: Port, state: int) -> bytes:
 
 
 
-## Response Model
-
-@dataclass(frozen=True)
-class PortState:
-    port: Port
-    state: int
-    lines: tuple[bool, ...]
-
-    def line(self, n: int) -> bool:
-        return self.lines[n]
-
-    @property
-    def upper_nibble(self) -> int:
-        return (self.state >> 4) & 0xF
-
-
-@dataclass(frozen=True)
-class DigitalInResult:
-    port0: Optional[PortState]
-    port1: Optional[PortState]
-
-    def state_of(self, port: Port) -> Optional[PortState]:
-        return self.port0 if port == Port.P0 else self.port1
-
-## Convenience Wrappers
+# Convenience Wrappers
 
 def write_ddm(dev: usb.core.Device, dir_mask: int = 0x00, drive_mask : int = 0x00) -> None:
     """
