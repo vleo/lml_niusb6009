@@ -36,6 +36,7 @@ class CONST(metaclass=FrozenClassMeta):
 class Subsystem(IntEnum):
     GENERIC = 0x00
     AI      = 0x02
+    AID     = 0x03
     DIO     = 0x10
     AO      = 0x21
 
@@ -69,6 +70,20 @@ class AoChannel(IntEnum):
     AO0 = 0x0000
     AO1 = 0x0001
 
+class AiChannel(IntEnum):
+    AI0 = 0x0000
+    AI1 = 0x0001
+    AI2 = 0x0002
+    AI3 = 0x0003
+    AI4 = 0x0004
+    AI5 = 0x0005
+    AI6 = 0x0006
+    AI7 = 0x0007
+
+class AiMode(IntEnum):
+    DIFF = 0x00
+    RSE  = 0x02
+
 # (n_ports, sorted_port_ids) -> (tag, port_list_bytes)
 _DIO_FORMS = {
     (1, (Port.P0,)):         (DiTag.ONE_PORT,  bytes([Port.P0, 0x00])),
@@ -91,7 +106,6 @@ def build_command(payload: bytes) -> bytes:
 
 def build_subsystem_cmd(opcode: Opcode, subsystem: Subsystem, data: bytes) -> bytes:
     """Build 01 <op> 02 <subsys> 00 00 <data>."""
-    # noinspection PyTypeChecker
     payload = bytes([0x01, int(opcode), 0x02, int(subsystem), 0x00, 0x00]) + data # type: ignore
     return build_command(payload)
 
@@ -171,9 +185,21 @@ def send_cmd(dev: usb.core.Device, cmd : bytes):
     except USBError as e:
         print(f"Error on sending to USB: {e}")
 
+def send_adc_req(dev: usb.core.Device, cmd : bytes):
+    """ NI-DAQmx start cmd sequence for a DI channels"""
+    try:
+        dev.write(CONST.EP_ANLG_IN, cmd, timeout=1000)
+    except USBError as e:
+        print(f"Error on sending ADC req to USB: {e}")
+
 def do_read(dev):
     """ NI-DAQmx read sequence for a DI channels"""
     resp = bytes(dev.read(CONST.EP_DGTL_IN, 64, timeout=2000))
+    return resp
+
+def do_read_adc(dev):
+    """ NI-DAQmx read sequence for a DI channels"""
+    resp = bytes(dev.read(CONST.EP_ANLG_IN, 64, timeout=2000))
     return resp
 
 @contextmanager

@@ -61,7 +61,6 @@ def write_do(dev: usb.core.Device, port: Port = Port.P0 , data:int = 0xFF) -> No
     response: bytes = do_read(device)
     print(response.hex())
     resp_ddm = parse_response(response)
-
     if resp_ddm != {"kind":"ack"}:
         raise ValueError("Incorrect ACK for do data")
 

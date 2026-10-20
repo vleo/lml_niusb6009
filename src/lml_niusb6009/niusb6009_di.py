@@ -39,8 +39,8 @@ def build_digital_in(ports: tuple[Port, ...]) -> bytes:
         raise ValueError(f"unsupported digital input ports: {ports}")
     # noinspection PyTypeChecker
     tag, port_bytes = _DI_FORMS[key]
-    data = bytes([0x00, int(tag)]) + port_bytes
-    return build_subsystem_cmd(Opcode.OPEN, Subsystem.DIO, data)
+    payload = bytes([0x00, int(tag)]) + port_bytes
+    return build_subsystem_cmd(Opcode.OPEN, Subsystem.DIO, payload)
 
 ## Response Model
 
