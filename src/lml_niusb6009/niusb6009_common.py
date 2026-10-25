@@ -18,6 +18,8 @@ from usb.legacy import USBError
 ap: argparse.ArgumentParser = argparse.ArgumentParser()
 ap.add_argument("--verbose", action="store_true")
 ap.add_argument("--reset", action="store_true")
+ap.add_argument("--P1_3_set0", action="store_true")
+ap.add_argument("--P1_3_set1", action="store_true")
 
 cmdLineArgs: argparse.Namespace = ap.parse_args()
 

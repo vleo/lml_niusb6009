@@ -40,7 +40,7 @@ def build_digital_out_write(port: Port, state: int) -> bytes:
 def write_ddm(dev: usb.core.Device, dir_mask: int = 0x00, drive_mask : int = 0x00) -> None:
     """
         dir_mask:   1 -> output;       0 -> input;
-        drive_mask: 1 -> active drive; 0 -> open collector;
+        drive_mask: 1 -> active drive (H -> 3.3V); 0 -> open collector;
         0xhl port0 0xFl port1
         hhhh llll port 0 nnnn llll port1
     """
@@ -70,6 +70,12 @@ if __name__ == "__main__":
         try:
             if cmdLineArgs.reset:
                 write_ddm(device) # everytrhing input, drivers - open collector
+            elif cmdLineArgs.P1_3_set0:
+                write_ddm(device, 0x0008, 0x0008)
+                write_do(device, Port.P1, 0x00)
+            elif cmdLineArgs.P1_3_set1:
+                write_ddm(device, 0x0008, 0x0008)
+                write_do(device, Port.P1, 0x08)
             else:
                 write_ddm(device, 0xFF0F, 0x0000)
                 write_do(device, Port.P0, 0xAA)

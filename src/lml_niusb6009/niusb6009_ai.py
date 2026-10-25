@@ -162,7 +162,9 @@ def read_ai(dev: usb.core.Device, min_mV, max_mV, diff_mode: AiMode, *channels: 
 if __name__ == "__main__":
     with usb_device_context(CONST.VID, CONST.PID) as device:
         try:
-            read_ai(device, -10000, 10000, AiMode.DIFF, AiChannel.AI0)
+            #read_ai(device, -10000, 10000, AiMode.DIFF, AiChannel.AI0)
+            #read_ai(device, -5000, 5000, AiMode.DIFF, AiChannel.AI0)
+            read_ai(device, -2000, 2000, AiMode.DIFF, AiChannel.AI0)
             #read_ai(device, -10000, 10000, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1)
             # read_ai(device, 0, 4096, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1, AiChannel.AI2)
             # read_ai(device, 0, 4096, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1, AiChannel.AI2, AiChannel.AI3)
