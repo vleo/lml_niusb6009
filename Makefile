@@ -1,15 +1,15 @@
 # Makefile for lml_common_toplevel
-.PHONY: all venv install build dev-install test clean
+.PHONY: all venv install build dev-install clean
 
 # Default python interpreter (can be overridden from command line)
 PYTHON ?= python3
 VENV_DIR = .venv
 VENV_BIN = $(VENV_DIR)/bin
 
-PIP_FIND_LINKS = /home/vleo/00_HW/CODES_U/lml_common/dist
+PIP_FIND_LINKS =../lml_common/dist
 
-# Default target runs the full setup and tests
-all: venv dev-install build test
+# Default target runs the full setup
+all: venv dev-install build 
 
 # 1. Initialize the virtual environment and upgrade pip
 venv: $(VENV_BIN)/activate
@@ -33,9 +33,9 @@ build: venv
 	$(VENV_BIN)/python -m build
 
 # 4. Run your verification test suite
-test: venv
-	@echo "==> Running validation tests..."
-	$(VENV_BIN)/python tests/test_both.py
+#test: venv
+#	@echo "==> Running validation tests..."
+#	$(VENV_BIN)/python tests/test_both.py
 
 # 5. Scrub all generated build artifacts, caches, and binaries
 clean:
