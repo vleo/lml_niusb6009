@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: System :: Hardware :: Hardware Drivers",
 ]
 
-dependencies = ["pyusb", "lml_common"]
+dependencies = ["pyusb"]
 
 [project.optional-dependencies]
 dev = [
