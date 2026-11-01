@@ -130,12 +130,15 @@ def build_command(payload: bytes) -> bytes:
     inner_len = 2 + len(payload)
     # noinspection PyTypeChecker
     cmd =  b"\x00\x01" + struct.pack(">H", total_len) + struct.pack(">H", inner_len) + payload
+    #print(cmd.hex())
     return cmd
 
 
-def build_subsystem_cmd(opcode: Opcode, subsystem: Subsystem, data: bytes) -> bytes:
+def build_subsystem_cmd(opcode: Opcode, subsystem: Subsystem, data: bytes, zeroWordBeforeData: bool = True) -> bytes:
     """Build 01 <op> 02 <subsys> 00 00 <data>."""
-    payload = bytes([0x01, int(opcode), 0x02, int(subsystem), 0x00, 0x00]) + data # type: ignore
+    zero_filler = bytes([0x00,0x00]) if zeroWordBeforeData else bytes([])
+    payload = bytes([0x01, int(opcode), 0x02, int(subsystem)]) + zero_filler + data # type: ignore
+    #print(payload.hex())
     return build_command(payload)
 
 

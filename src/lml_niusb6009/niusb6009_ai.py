@@ -164,8 +164,9 @@ if __name__ == "__main__":
         try:
             #read_ai(device, -10000, 10000, AiMode.DIFF, AiChannel.AI0)
             #read_ai(device, -5000, 5000, AiMode.DIFF, AiChannel.AI0)
-            read_ai(device, -2000, 2000, AiMode.DIFF, AiChannel.AI0)
-            #read_ai(device, -10000, 10000, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1)
+            v1 = read_ai(device, -1000, 1000, AiMode.DIFF, AiChannel.AI1)
+            v2= read_ai(device, -2000, 2000, AiMode.DIFF, AiChannel.AI2)
+            print(f"Value from read_ai =", v1,v2)
             # read_ai(device, 0, 4096, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1, AiChannel.AI2)
             # read_ai(device, 0, 4096, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1, AiChannel.AI2, AiChannel.AI3)
         except USBError as e:

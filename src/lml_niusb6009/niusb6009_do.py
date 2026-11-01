@@ -71,11 +71,11 @@ if __name__ == "__main__":
             if cmdLineArgs.reset:
                 write_ddm(device) # everytrhing input, drivers - open collector
             elif cmdLineArgs.P1_3_set0:
-                write_ddm(device, 0x0008, 0x0008)
+                write_ddm(device, 0x0009, 0x0008)
                 write_do(device, Port.P1, 0x00)
             elif cmdLineArgs.P1_3_set1:
-                write_ddm(device, 0x0008, 0x0008)
-                write_do(device, Port.P1, 0x08)
+                write_ddm(device, 0x0009, 0x0008)
+                write_do(device, Port.P1, 0x09)
             else:
                 write_ddm(device, 0xFF0F, 0x0000)
                 write_do(device, Port.P0, 0xAA)
