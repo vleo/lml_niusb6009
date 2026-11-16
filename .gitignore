@@ -1,5 +1,4 @@
 *.swp
-.idea/workspace.xml
 dist/
 src/lml_niusb6009.egg-info/
 src/lml_niusb6009/__pycache__/

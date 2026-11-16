@@ -1,21 +1,18 @@
 #!/bin/env python
 import usb.core
-import time
 
 import struct
-from typing import Optional
-
-from dataclasses import dataclass
 
 from usb.legacy import USBError
 
-from lml_niusb6009.niusb6009_common import Subsystem, Opcode, Port, CONST, AiChannel, AiMode, build_command, \
-    send_adc_req, do_read_adc
+from lml_niusb6009.niusb6009_common import Subsystem, Opcode, CONST, AiChannel, AiMode, build_command, \
+    do_read_adc
 from lml_niusb6009.niusb6009_common import build_subsystem_cmd
 from lml_niusb6009.niusb6009_common import parse_response
 from lml_niusb6009.niusb6009_common import usb_device_context
 from lml_niusb6009.niusb6009_common import send_cmd, do_read
-from lml_niusb6009.niusb6009_common import cmdLineArgs
+
+verbose: bool = False
 
 #                                     | <-- payload    -->|
 #                        op   sb      |      dir       drv
@@ -111,10 +108,12 @@ AI_MAGIC_TEARDOWN = [
 
 ## Response Model
 def send_cmd_rcv_ACK(dev: usb.core.Device, command: bytes, command_name: str) -> None:
-    print(command.hex())
+    if verbose:
+        print(command.hex())
     send_cmd(dev, command)
-    response: bytes = do_read(device)
-    print(response.hex())
+    response: bytes = do_read(dev)
+    if verbose:
+        print(response.hex())
     resp_ddm = parse_response(response)
     if resp_ddm != {"kind":"ack"}:
         raise ValueError(f"Incorrect ACK for {command_name:s}")
@@ -122,7 +121,7 @@ def send_cmd_rcv_ACK(dev: usb.core.Device, command: bytes, command_name: str) ->
 
 ## top level orchestrator
 
-def read_ai(dev: usb.core.Device, min_mV, max_mV, diff_mode: AiMode, *channels: AiChannel) -> tuple[int]:
+def read_ai(dev: usb.core.Device, min_mV, max_mV, diff_mode: AiMode, num_samples: int,  *channels: AiChannel) -> list[tuple[int]]:
 
     command: bytes = build_ai_channel_list(channels)
     send_cmd_rcv_ACK(dev, command, "build_ai_channel_list")
@@ -141,15 +140,21 @@ def read_ai(dev: usb.core.Device, min_mV, max_mV, diff_mode: AiMode, *channels: 
 
     command = bytes(AI_REQEST_SAMPLE)
     cmd = build_command(command)
-    print("REQ SAMPLE:", cmd.hex())
-    send_cmd(dev, cmd)
-
-    response: bytes = do_read_adc(device)
-    print("SAMPLE:", response.hex())
+    if verbose:
+        print("REQ SAMPLE:", cmd.hex())
 
     nch = len(channels)
-    values: tuple[int] = struct.unpack(f">{nch:d}H", response)
-    print("VALUES:", values)
+    values = []
+    for i in range(num_samples):
+        send_cmd(dev, cmd)
+
+        response: bytes = do_read_adc(dev)
+        if verbose:
+            print("SAMPLE:", response.hex())
+
+        values: list[tuple[int]] = values + [struct.unpack(f">{nch:d}H", response)]
+    if verbose:
+        print("VALUES:", values)
 
     for i in range(0,len(AI_MAGIC_TEARDOWN)):
         command = bytes(AI_MAGIC_TEARDOWN[i])
@@ -157,16 +162,20 @@ def read_ai(dev: usb.core.Device, min_mV, max_mV, diff_mode: AiMode, *channels: 
 
     return values
 
-
-
 if __name__ == "__main__":
+    import argparse
+    ap: argparse.ArgumentParser = argparse.ArgumentParser()
+    ap.add_argument("--verbose", action="store_true")
+    cmdLineArgs: argparse.Namespace = ap.parse_args()
+    verbose = cmdLineArgs.verbose
+
     with usb_device_context(CONST.VID, CONST.PID) as device:
         try:
             #read_ai(device, -10000, 10000, AiMode.DIFF, AiChannel.AI0)
             #read_ai(device, -5000, 5000, AiMode.DIFF, AiChannel.AI0)
-            v1 = read_ai(device, -1000, 1000, AiMode.DIFF, AiChannel.AI1)
-            v2= read_ai(device, -2000, 2000, AiMode.DIFF, AiChannel.AI2)
-            print(f"Value from read_ai =", v1,v2)
+            v1 = read_ai(device, -1000, 1000, AiMode.DIFF, 5, AiChannel.AI1, AiChannel.AI2)
+            #v2= read_ai(device, -2000, 2000, AiMode.DIFF, 2, AiChannel.AI2)
+            print(f"Values from read_ai =", v1)
             # read_ai(device, 0, 4096, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1, AiChannel.AI2)
             # read_ai(device, 0, 4096, AiMode.DIFF, AiChannel.AI0, AiChannel.AI1, AiChannel.AI2, AiChannel.AI3)
         except USBError as e:

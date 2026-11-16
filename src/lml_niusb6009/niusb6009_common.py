@@ -1,9 +1,8 @@
 #!/bin/env python
 import usb.core
 import usb.util
+from usb.legacy import USBError
 from contextlib import contextmanager
-
-# import time
 
 import struct
 from enum import IntEnum
@@ -37,19 +36,6 @@ def freeze_class(cls: T) -> T:
     """
     setattr(cls, '_locked', True)
     return cls
-
-import argparse
-
-from usb.legacy import USBError
-
-ap: argparse.ArgumentParser = argparse.ArgumentParser()
-ap.add_argument("--verbose", action="store_true")
-ap.add_argument("--reset", action="store_true")
-ap.add_argument("--P1_3_set0", action="store_true")
-ap.add_argument("--P1_3_set1", action="store_true")
-
-cmdLineArgs: argparse.Namespace = ap.parse_args()
-
 
 @freeze_class
 @dataclass(frozen=True)
@@ -125,20 +111,22 @@ _DIO_FORMS = {
 # `IntEnum` values are `int` subclasses, so `bytes([Subsystem.DIO])` and `struct.pack("<B", Subsystem.DIO)` both work directly.
 # Make the enum usage explicit with `int(...)` where it clarifies intent.
 
-def build_command(payload: bytes) -> bytes:
+def build_command(payload: bytes, verbose: bool= False) -> bytes:
     total_len = 6 + len(payload)
     inner_len = 2 + len(payload)
     # noinspection PyTypeChecker
     cmd =  b"\x00\x01" + struct.pack(">H", total_len) + struct.pack(">H", inner_len) + payload
-    #print(cmd.hex())
+    if verbose:
+        print(cmd.hex())
     return cmd
 
 
-def build_subsystem_cmd(opcode: Opcode, subsystem: Subsystem, data: bytes, zeroWordBeforeData: bool = True) -> bytes:
+def build_subsystem_cmd(opcode: Opcode, subsystem: Subsystem, data: bytes, zeroWordBeforeData: bool = True, verbose: bool= False) -> bytes:
     """Build 01 <op> 02 <subsys> 00 00 <data>."""
     zero_filler = bytes([0x00,0x00]) if zeroWordBeforeData else bytes([])
     payload = bytes([0x01, int(opcode), 0x02, int(subsystem)]) + zero_filler + data # type: ignore
-    #print(payload.hex())
+    if verbose:
+        print(payload.hex())
     return build_command(payload)
 
 
@@ -235,7 +223,7 @@ def do_read_adc(dev):
     return resp
 
 @contextmanager
-def usb_device_context(idVendor: int, idProduct: int):
+def usb_device_context(idVendor: int, idProduct: int, verbose: bool = False):
     dev = usb.core.find(idVendor=idVendor, idProduct=idProduct)
     if dev is None:
         raise ValueError('Device not found.')
@@ -271,10 +259,12 @@ def usb_device_context(idVendor: int, idProduct: int):
             except usb.core.USBError as e:
                 print(f"ignored USBError: {e}")
         else:
-                print("No kernel driver to re-attach (none was active at start).") if cmdLineArgs.verbose else None
+            if verbose:
+                print("No kernel driver to re-attach (none was active at start).")
 
         usb.util.dispose_resources(dev)
-        print("Device closed and released.") if cmdLineArgs.verbose else None
+        if verbose:
+            print("Device closed and released.")
 
 
 if __name__ == "__main__":

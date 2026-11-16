@@ -2,7 +2,6 @@
 import usb.core
 
 import struct
-from typing import Optional
 
 from usb.legacy import USBError
 
@@ -11,7 +10,6 @@ from lml_niusb6009.niusb6009_common import build_subsystem_cmd
 from lml_niusb6009.niusb6009_common import parse_response
 from lml_niusb6009.niusb6009_common import usb_device_context
 from lml_niusb6009.niusb6009_common import send_cmd, do_read
-from lml_niusb6009.niusb6009_common import cmdLineArgs
 
 #                                     | <-- payload    -->|
 #                        op   sb      |      dir       drv
@@ -37,7 +35,7 @@ def build_digital_out_write(port: Port, state: int) -> bytes:
 
 # Convenience Wrappers
 
-def write_ddm(dev: usb.core.Device, dir_mask: int = 0x00, drive_mask : int = 0x00) -> None:
+def write_ddm(dev: usb.core.Device, dir_mask: int = 0x00, drive_mask : int = 0x00, verbose: bool= False) -> None:
     """
         dir_mask:   1 -> output;       0 -> input;
         drive_mask: 1 -> active drive (H -> 3.3V); 0 -> open collector;
@@ -45,41 +43,53 @@ def write_ddm(dev: usb.core.Device, dir_mask: int = 0x00, drive_mask : int = 0x0
         hhhh llll port 0 nnnn llll port1
     """
     command: bytes = build_digital_out_config(dir_mask,drive_mask)
-    print(command.hex())
+    if verbose:
+        print(command.hex())
     send_cmd(dev, command)
-    response: bytes = do_read(device)
-    print(response.hex())
+    response: bytes = do_read(dev)
+    if verbose:
+        print(response.hex())
     resp_ddm = parse_response(response)
 
     if resp_ddm != {"kind":"ack"}:
         raise ValueError("Incorrect ACK for do direction/drive_type")
 
-def write_do(dev: usb.core.Device, port: Port = Port.P0 , data:int = 0xFF) -> None:
+def write_do(dev: usb.core.Device, port: Port = Port.P0 , data:int = 0xFF, verbose: bool= False) -> None:
     command: bytes = build_digital_out_write(port, data)
-    print(command.hex())
+    if verbose:
+        print(command.hex())
     send_cmd(dev, command)
-    response: bytes = do_read(device)
-    print(response.hex())
+    response: bytes = do_read(dev)
+    if verbose:
+        print(response.hex())
     resp_ddm = parse_response(response)
     if resp_ddm != {"kind":"ack"}:
         raise ValueError("Incorrect ACK for do data")
 
 
 if __name__ == "__main__":
-    with usb_device_context(CONST.VID, CONST.PID) as device:
+    import argparse
+    ap: argparse.ArgumentParser = argparse.ArgumentParser()
+    ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--reset", action="store_true")
+    ap.add_argument("--P1_3_set0", action="store_true")
+    ap.add_argument("--P1_3_set1", action="store_true")
+    cmdLineArgs: argparse.Namespace = ap.parse_args()
+
+    with usb_device_context(CONST.VID, CONST.PID, cmdLineArgs.verbose) as device:
         try:
             if cmdLineArgs.reset:
-                write_ddm(device) # everytrhing input, drivers - open collector
+                write_ddm(device, cmdLineArgs.verbose) # everytrhing input, drivers - open collector
             elif cmdLineArgs.P1_3_set0:
-                write_ddm(device, 0x0009, 0x0008)
-                write_do(device, Port.P1, 0x00)
+                write_ddm(device, 0x0009, 0x0008, cmdLineArgs.verbose)
+                write_do(device, Port.P1, 0x00, cmdLineArgs.verbose)
             elif cmdLineArgs.P1_3_set1:
-                write_ddm(device, 0x0009, 0x0008)
-                write_do(device, Port.P1, 0x09)
+                write_ddm(device, 0x0009, 0x0008, cmdLineArgs.verbose)
+                write_do(device, Port.P1, 0x09, cmdLineArgs.verbose)
             else:
-                write_ddm(device, 0xFF0F, 0x0000)
-                write_do(device, Port.P0, 0xAA)
-                write_do(device, Port.P1, 0x05)
+                write_ddm(device, 0xFF0F, 0x0000, cmdLineArgs.verbose)
+                write_do(device, Port.P0, 0xAA, cmdLineArgs.verbose)
+                write_do(device, Port.P1, 0x05, cmdLineArgs.verbose)
         except USBError as e:
             pass
         except Exception as e:
