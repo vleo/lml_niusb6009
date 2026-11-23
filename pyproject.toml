@@ -1,13 +1,13 @@
 [build-system]
 #requires = ["setuptools>=61.0.0", "Cython>=3.0.0"]
-requires = ["setuptools>=61.0.0"]
+requires = ["setuptools>=61.0.0", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lml_niusb6009"
 version = "0.1.0"
 description = "NI USB-6009 interface library pure python based on pyusb"
-readme = "usb-6009.md"
+readme = "LMLUSB_6009.md"
 requires-python = ">=3.11"
 authors = [
     { name = "Vassili Leonov", email = "vleolml@mail.ru" }

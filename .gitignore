@@ -1,11 +1,24 @@
-*.swp
+# Environments & caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Build & sdist round-trip artifacts
+
+build/
 dist/
-src/lml_niusb6009.egg-info/
-src/lml_niusb6009/__pycache__/
+*.egg-info/
+PKG-INFO
+setup.cfg
+
+wheelhouse/
+
+# Editor / IDE
 
 # Ignore all in .idea
 .idea/*
 # ...  except run configurations
 !.idea/runConfigurations/
-
-
+*.swp
