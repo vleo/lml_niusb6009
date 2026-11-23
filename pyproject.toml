@@ -40,7 +40,7 @@ where = ["src"]
 
 # Tell setuptools to include non-python assets like tshark_capture.sh
 [tool.setuptools.package-data]
-lml_niusb6009 = ["*.sh"]
+lml_niusb6009 = ["*.sh", "py.typed"]
 
 [tool.mypy]
 # Tell mypy where your source roots live so it maps imports flawlessly
@@ -52,6 +52,7 @@ explicit_package_bases = true
 # Optional but highly recommended for clear, strict safety
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false
+disallow_untyped_defs = true
+check_untyped_defs = true
 
 

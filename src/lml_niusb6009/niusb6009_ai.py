@@ -144,7 +144,7 @@ def read_ai(dev: usb.core.Device, min_mV, max_mV, diff_mode: AiMode, num_samples
         print("REQ SAMPLE:", cmd.hex())
 
     nch = len(channels)
-    values = []
+    values: list[tuple[int]] = []
     for i in range(num_samples):
         send_cmd(dev, cmd)
 
@@ -152,7 +152,7 @@ def read_ai(dev: usb.core.Device, min_mV, max_mV, diff_mode: AiMode, num_samples
         if verbose:
             print("SAMPLE:", response.hex())
 
-        values: list[tuple[int]] = values + [struct.unpack(f">{nch:d}H", response)]
+        values = values + [struct.unpack(f">{nch:d}H", response)]
     if verbose:
         print("VALUES:", values)
 
